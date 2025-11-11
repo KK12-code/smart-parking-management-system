@@ -1,8 +1,6 @@
 package com.parking;
 
-/**
- * Concrete vehicle representing a two-wheeler.
- */
+// tiny helper class so we can add bike-specific behavior later without touching Vehicle
 public class Bike extends Vehicle {
 
     public Bike(String licensePlate) {

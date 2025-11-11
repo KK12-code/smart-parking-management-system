@@ -1,8 +1,6 @@
 package com.parking;
 
-/**
- * Concrete vehicle representing a standard car.
- */
+// nothing fancy here yet — just tagging the vehicle type so ParkingLot can print something friendly
 public class Car extends Vehicle {
 
     public Car(String licensePlate) {

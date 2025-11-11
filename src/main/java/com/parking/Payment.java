@@ -1,9 +1,6 @@
 package com.parking;
 
-/**
- * Placeholder class to demonstrate where payment handling will live.
- * You can later connect this to a payment gateway or billing module.
- */
+// figured I'd stub payments out now so the integration point is obvious
 public class Payment {
 
     public void process(Vehicle vehicle) {
@@ -11,5 +8,6 @@ public class Payment {
         System.out.printf("Processing payment for %s (%s).%n",
                 vehicle.getVehicleType(),
                 vehicle.getLicensePlate());
+        // eventually this might return a receipt object instead of just printing
     }
 }

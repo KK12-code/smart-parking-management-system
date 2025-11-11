@@ -3,12 +3,11 @@ package com.parking;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Singleton parking lot that owns and manages all parking spots.
- */
+// keeping this as a singleton so the CLI always talks to the same parking lot instance
 public class ParkingLot {
 
     private static final int DEFAULT_SPOT_COUNT = 10;
+    // eager initialization is overkill but avoids null checks all over the place
     private static final ParkingLot INSTANCE = new ParkingLot(DEFAULT_SPOT_COUNT);
 
     private final List<ParkingSpot> parkingSpots;
@@ -18,6 +17,7 @@ public class ParkingLot {
         for (int i = 1; i <= numberOfSpots; i++) {
             parkingSpots.add(new ParkingSpot(i));
         }
+        // could load spot info from a config file later instead of hardcoding
     }
 
     public static ParkingLot getInstance() {
@@ -28,6 +28,7 @@ public class ParkingLot {
      * Attempts to park the provided vehicle in the first available spot.
      */
     public synchronized boolean parkVehicle(Vehicle vehicle) {
+        // scanning sequentially is fine for tiny lots; bigger setups probably need indexing
         for (ParkingSpot spot : parkingSpots) {
             if (spot.isAvailable() && spot.parkVehicle(vehicle)) {
                 handlePaymentPlaceholder(vehicle);
@@ -50,6 +51,7 @@ public class ParkingLot {
                 return true;
             }
         }
+        // maybe should use a map later if lookups by plate become hot paths
         return false;
     }
 
@@ -73,12 +75,12 @@ public class ParkingLot {
     }
 
     private void handlePaymentPlaceholder(Vehicle vehicle) {
-        // Placeholder hook: replace with real payment processor later.
+        // calling the payment placeholder so we remember to plug in billing logic later
         new Payment().process(vehicle);
     }
 
     private void persistParkingDataPlaceholder(String action, Vehicle vehicle, ParkingSpot spot) {
-        // Placeholder hook: replace with real persistence (file, DB, etc.) later.
+        // logging to the console for now — eventually this should hit a database/file
         new Ticket(action, vehicle, spot.getId()).saveToFile();
     }
 }

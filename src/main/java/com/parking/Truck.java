@@ -1,8 +1,6 @@
 package com.parking;
 
-/**
- * Concrete vehicle representing a heavy truck.
- */
+// made a separate class in case we later want special rates for trucks
 public class Truck extends Vehicle {
 
     public Truck(String licensePlate) {

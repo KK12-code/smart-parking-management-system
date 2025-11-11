@@ -1,8 +1,6 @@
 package com.parking;
 
-/**
- * Represents a single parking spot that can hold one vehicle at a time.
- */
+// just a dumb spot right now — no notion of size or pricing tiers yet
 public class ParkingSpot {
 
     private final int id;
@@ -29,6 +27,7 @@ public class ParkingSpot {
         if (!isAvailable()) {
             return false;
         }
+        // not cloning or validating vehicle type for now, assuming caller already checked that
         this.vehicle = vehicle;
         return true;
     }
@@ -38,6 +37,7 @@ public class ParkingSpot {
      */
     public Vehicle removeVehicle() {
         Vehicle removed = this.vehicle;
+        // clearing the reference immediately so the spot is marked free even if caller forgets
         this.vehicle = null;
         return removed;
     }

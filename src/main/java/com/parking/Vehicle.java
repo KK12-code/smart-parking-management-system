@@ -1,9 +1,6 @@
 package com.parking;
 
-/**
- * Abstract representation of a vehicle in the parking system.
- * Every specific vehicle type simply describes its own type string.
- */
+// keeping this abstract so cars/bikes/trucks can just plug in their type strings later
 public abstract class Vehicle {
     private final String licensePlate;
     private final String vehicleType;
@@ -12,6 +9,7 @@ public abstract class Vehicle {
         if (licensePlate == null || licensePlate.isBlank()) {
             throw new IllegalArgumentException("License plate cannot be empty.");
         }
+        // forcing uppercase mostly for simple comparisons — proper locale handling can come later
         this.licensePlate = licensePlate.trim().toUpperCase();
         this.vehicleType = vehicleType;
     }

@@ -2,9 +2,7 @@ package com.parking;
 
 import java.util.Scanner;
 
-/**
- * Simple command-line interface so users can interact with the parking lot.
- */
+// writing a tiny console UI so I can manually test without spinning up a GUI
 public class Main {
 
     private final ParkingLot parkingLot = ParkingLot.getInstance();
@@ -19,6 +17,7 @@ public class Main {
         boolean exit = false;
 
         while (!exit) {
+            // looping until user bails out — no background threads so this is fine
             printMenu();
             int choice = readIntInput("Choose an option: ");
 
@@ -32,10 +31,11 @@ public class Main {
         }
 
         System.out.println("Thank you for using the system. Goodbye!");
-        scanner.close();
+        scanner.close(); // keeping scanner scoped to this class so we can close it here
     }
 
     private void printMenu() {
+        // menu text is plain ASCII so it renders nicely even in basic terminals
         System.out.println("""
                 ------------------------------
                 1. Park a vehicle
@@ -59,12 +59,14 @@ public class Main {
         if (parked) {
             System.out.println("Vehicle parked successfully!");
         } else {
+            // future idea: offer to join a waitlist instead of just printing this
             System.out.println("Parking lot is full. Please try again later.");
         }
     }
 
     private void removeVehicleFlow() {
         String licensePlate = readStringInput("Enter license plate to remove: ");
+        // not doing fancy lookup — just asking for plate and letting the lot handle it
         boolean removed = parkingLot.removeVehicle(licensePlate);
 
         if (removed) {
@@ -89,6 +91,7 @@ public class Main {
             case 3 -> new Truck(licensePlate);
             default -> {
                 System.out.println("Invalid vehicle type.");
+                // could loop again here, but I'd rather keep the flow short for now
                 yield null;
             }
         };
@@ -100,6 +103,7 @@ public class Main {
             try {
                 int value = Integer.parseInt(scanner.nextLine().trim());
                 if (value < 0) {
+                    // keeping validation gentle so new users don't rage quit
                     System.out.println("Please enter a positive number.");
                     continue;
                 }
@@ -112,6 +116,7 @@ public class Main {
 
     private String readStringInput(String prompt) {
         System.out.print(prompt);
+        // not validating empty strings yet — might add checks once requirements are clearer
         return scanner.nextLine().trim();
     }
 }
