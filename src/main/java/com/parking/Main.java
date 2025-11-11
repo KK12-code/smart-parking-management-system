@@ -1,5 +1,7 @@
 package com.parking;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 // writing a tiny console UI so I can manually test without spinning up a GUI
@@ -7,6 +9,8 @@ public class Main {
 
     private final ParkingLot parkingLot = ParkingLot.getInstance();
     private final Scanner scanner = new Scanner(System.in);
+    private final Payment payment = new Payment(scanner);
+    private final Map<String, Ticket> activeTickets = new HashMap<>();
 
     public static void main(String[] args) {
         new Main().run();
@@ -19,7 +23,7 @@ public class Main {
         while (!exit) {
             // looping until user bails out — no background threads so this is fine
             printMenu();
-            int choice = readIntInput("Choose an option: ");
+            int choice = readIntInput("Choose an option (1-4): ");
 
             switch (choice) {
                 case 1 -> parkVehicleFlow();
@@ -57,7 +61,11 @@ public class Main {
         boolean parked = parkingLot.parkVehicle(vehicle);
 
         if (parked) {
+            Ticket ticket = Ticket.generateTicket(vehicle);
+            activeTickets.put(vehicle.getLicensePlate(), ticket);
             System.out.println("Vehicle parked successfully!");
+            // stashing the ticket so we can settle payment when the driver heads out
+            System.out.printf("Entry time recorded at %s%n", ticket.getEntryTime());
         } else {
             // future idea: offer to join a waitlist instead of just printing this
             System.out.println("Parking lot is full. Please try again later.");
@@ -67,9 +75,20 @@ public class Main {
     private void removeVehicleFlow() {
         String licensePlate = readStringInput("Enter license plate to remove: ");
         // not doing fancy lookup — just asking for plate and letting the lot handle it
-        boolean removed = parkingLot.removeVehicle(licensePlate);
+        String normalizedPlate = licensePlate.trim().toUpperCase();
+        boolean removed = parkingLot.removeVehicle(normalizedPlate);
 
         if (removed) {
+            Ticket ticket = activeTickets.remove(normalizedPlate);
+            if (ticket == null) {
+                System.out.println("Vehicle removed, but no ticket data was tracked (probably a manual override).");
+                return;
+            }
+            double cost = ticket.closeTicket();
+            System.out.printf("Parking duration cost for %s: $%.2f%n", normalizedPlate, cost);
+            // piping the total over to the Payment helper so the user can settle up right away
+            payment.processPayment(cost);
+            ticket.saveToFile();
             System.out.println("Vehicle removed. Spot is now available.");
         } else {
             System.out.println("Vehicle not found. Please verify the license plate.");

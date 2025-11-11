@@ -1,5 +1,9 @@
 package com.parking;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +12,7 @@ public class ParkingLot {
 
     private static final int DEFAULT_SPOT_COUNT = 10;
     // eager initialization is overkill but avoids null checks all over the place
-    private static final ParkingLot INSTANCE = new ParkingLot(DEFAULT_SPOT_COUNT);
+    private static final ParkingLot INSTANCE = new ParkingLot(resolveConfiguredCapacity());
 
     private final List<ParkingSpot> parkingSpots;
 
@@ -18,6 +22,7 @@ public class ParkingLot {
             parkingSpots.add(new ParkingSpot(i));
         }
         // could load spot info from a config file later instead of hardcoding
+        // ^ finally hooked into config.txt but leaving the reminder because there is still room for a richer schema
     }
 
     public static ParkingLot getInstance() {
@@ -74,13 +79,33 @@ public class ParkingLot {
         System.out.println("--------------------------\n");
     }
 
-    private void handlePaymentPlaceholder(Vehicle vehicle) {
-        // calling the payment placeholder so we remember to plug in billing logic later
-        new Payment().process(vehicle);
+    private static int resolveConfiguredCapacity() {
+        Path configPath = Paths.get("src", "resources", "config.txt");
+        try {
+            if (Files.exists(configPath)) {
+                String rawValue = Files.readString(configPath).trim();
+                if (!rawValue.isEmpty()) {
+                    int configured = Integer.parseInt(rawValue);
+                    if (configured > 0) {
+                        return configured;
+                    }
+                }
+            }
+        } catch (IOException | NumberFormatException ex) {
+            System.err.println("Config read failed, sticking with default size: " + ex.getMessage());
+        }
+        return DEFAULT_SPOT_COUNT;
     }
 
+    @SuppressWarnings("unused")
+    private void handlePaymentPlaceholder(Vehicle vehicle) {
+        // calling the payment placeholder so we remember to plug in billing logic later
+        // Main now takes over actual payments, but I'm keeping the note here as a breadcrumb.
+    }
+
+    @SuppressWarnings("unused")
     private void persistParkingDataPlaceholder(String action, Vehicle vehicle, ParkingSpot spot) {
         // logging to the console for now — eventually this should hit a database/file
-        new Ticket(action, vehicle, spot.getId()).saveToFile();
+        // the Ticket class handles the heavy lifting, so no duplicate work here anymore.
     }
 }
