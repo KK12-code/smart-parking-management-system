@@ -53,12 +53,13 @@ public class Main {
         String licensePlate = readStringInput("Enter vehicle license plate: ");
         Vehicle vehicle = chooseVehicleType(licensePlate);
 
-        if (vehicle == null) {
-            System.out.println("Vehicle creation failed. Returning to main menu.");
+        boolean parked;
+        try {
+            parked = parkingLot.parkVehicle(vehicle);
+        } catch (Exception ex) {
+            System.out.println("Had trouble parking the vehicle. Please try again once the system settles down.");
             return;
         }
-
-        boolean parked = parkingLot.parkVehicle(vehicle);
 
         if (parked) {
             Ticket ticket = Ticket.generateTicket(vehicle);
@@ -76,7 +77,13 @@ public class Main {
         String licensePlate = readStringInput("Enter license plate to remove: ");
         // not doing fancy lookup — just asking for plate and letting the lot handle it
         String normalizedPlate = licensePlate.trim().toUpperCase();
-        boolean removed = parkingLot.removeVehicle(normalizedPlate);
+        boolean removed;
+        try {
+            removed = parkingLot.removeVehicle(normalizedPlate);
+        } catch (Exception ex) {
+            System.out.println("Could not complete the removal right now. Please try again in a moment.");
+            return;
+        }
 
         if (removed) {
             Ticket ticket = activeTickets.remove(normalizedPlate);
@@ -87,7 +94,7 @@ public class Main {
             double cost = ticket.closeTicket();
             System.out.printf("Parking duration cost for %s: $%.2f%n", normalizedPlate, cost);
             // piping the total over to the Payment helper so the user can settle up right away
-            payment.processPayment(cost);
+            payment.processPayment(cost, normalizedPlate);
             ticket.saveToFile();
             System.out.println("Vehicle removed. Spot is now available.");
         } else {
@@ -96,24 +103,27 @@ public class Main {
     }
 
     private Vehicle chooseVehicleType(String licensePlate) {
-        System.out.println("""
-                Select vehicle type:
-                1. Car
-                2. Bike
-                3. Truck""");
+        while (true) {
+            System.out.println("""
+                    Select vehicle type:
+                    1. Car
+                    2. Bike
+                    3. Truck""");
 
-        int choice = readIntInput("Enter type number: ");
+            int choice = readIntInput("Enter type number: ");
 
-        return switch (choice) {
-            case 1 -> new Car(licensePlate);
-            case 2 -> new Bike(licensePlate);
-            case 3 -> new Truck(licensePlate);
-            default -> {
-                System.out.println("Invalid vehicle type.");
-                // could loop again here, but I'd rather keep the flow short for now
-                yield null;
+            Vehicle vehicle = switch (choice) {
+                case 1 -> new Car(licensePlate);
+                case 2 -> new Bike(licensePlate);
+                case 3 -> new Truck(licensePlate);
+                default -> null;
+            };
+
+            if (vehicle != null) {
+                return vehicle;
             }
-        };
+            System.out.println("Invalid vehicle type. Let's try that again.");
+        }
     }
 
     private int readIntInput(String prompt) {
@@ -134,8 +144,15 @@ public class Main {
     }
 
     private String readStringInput(String prompt) {
-        System.out.print(prompt);
-        // not validating empty strings yet — might add checks once requirements are clearer
-        return scanner.nextLine().trim();
+        while (true) {
+            System.out.print(prompt);
+            String input = scanner.nextLine().trim();
+            if (input.isEmpty()) {
+                // gently nudging rather than scolding — folks type fast on kiosks
+                System.out.println("Input cannot be empty. Please try again.");
+                continue;
+            }
+            return input;
+        }
     }
 }
